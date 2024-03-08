@@ -16,7 +16,9 @@ const app = express();
 
 app.use(express.json());
 app.use(express.static("view"));
-app.use(cors());
+app.use(cors({
+  origin: ["https://shop-front-1.onrender.com/"]
+}));
 app.use(helmet());
 
 app.use(auth);
