@@ -1,1 +1,0 @@
-import{a}from"./api-bW8whBTP.js";const o=async e=>{const s=await a(`/news/?page=${e}`);return console.log(s),s.data},t=async e=>{const s=await a(`/get-single-news/${e}`);return console.log(s),s.data};export{o as g,t as s};

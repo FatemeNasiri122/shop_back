@@ -190,7 +190,10 @@ exports.addToCart = async (req, res, next) => {
         let updatedProduct = {};
         let sumOfPrice = 0;
         const foundProduct = await Product.findById(product._id);
-        if (!foundProduct) {
+        if (foundProduct) {
+            productCount = foundProduct.numberOfProduct > 0 ? foundProduct.numberOfProduct - 1 : 0;
+            await Product.findByIdAndUpdate(product._id, {numberOfProduct: productCount});
+        } else {
             const error = new Error("product not found");
             error.statusCode = 404;
             throw error;
@@ -245,7 +248,10 @@ exports.removeFromCart = async (req, res, next) => {
             return item.product._id.toString() !== product._id.toString();   
         });
         const foundProduct = await Product.findById(product._id);
-        if (!foundProduct) {
+        if (foundProduct) {
+            productCount = foundProduct.numberOfProduct > 0 ? foundProduct.numberOfProduct + productCount : 0;
+            await Product.findByIdAndUpdate(product._id, {numberOfProduct: productCount});
+        } else {
             const error = new Error("product not found");
             error.statusCode = 404;
             throw error;
@@ -255,7 +261,7 @@ exports.removeFromCart = async (req, res, next) => {
         const totalPrice = newCart.reduce((accumulator, item) => accumulator + +item.sumOfPrice , 0);
         const updatedUser = await User.findByIdAndUpdate(user._id, { cart: { items: newCart, totalOrders, totalPrice } });
         console.log(updatedUser)
-        res.status(200).json({updatedUser, message: "product removed from favorite"});
+        res.status(200).json({updatedUser, message: "product removed from cart"});
     } catch (error) {
         next(error);
     }
@@ -267,8 +273,12 @@ exports.reduceCart = async (req, res, next) => {
     try {
         let newCart = [];
         let sumOfPrice = 0;
+        let productCount = 0;
         const foundProduct = await Product.findById(product._id);
-        if (!foundProduct) {
+        if (foundProduct) {
+            productCount = foundProduct.numberOfProduct > 0 ? foundProduct.numberOfProduct + 1 : 0;
+            await Product.findByIdAndUpdate(product._id, {numberOfProduct: productCount});
+        } else {
             const error = new Error("product not found");
             error.statusCode = 404;
             throw error;

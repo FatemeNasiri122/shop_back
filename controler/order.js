@@ -15,7 +15,7 @@ exports.addOrder = async (req, res, next) => {
                     console.log("error");
                     return;
                 }
-                updatedProduct = await Product.findByIdAndUpdate(foundProduct._id, { numberOfProduct: productCount, });
+                const updatedProduct = await Product.findByIdAndUpdate(foundProduct._id, { numberOfProduct: productCount, });
                 console.log(updatedProduct);
             } else {
                 const error = new Error("product not found");
@@ -26,7 +26,7 @@ exports.addOrder = async (req, res, next) => {
         const order = new Order({ cart: user.cart, user: { firstName: user.firstName, lastName: user.lastName, email: user.email},selectedAddress: req.body.selectedAddress , userId: user._id, orderCode: Math.floor(100000 + Math.random() * 900000) });
         const savedOrder = await order.save();
         const editUser = await User.findByIdAndUpdate(user._id, { cart: { items: [] } });
-        res.status(200).json({ order: savedOrder, redirectUrl: '/' });
+        res.status(200).json({ message: "order added successfully" });
     } catch (error) {
         next(error);
     }
