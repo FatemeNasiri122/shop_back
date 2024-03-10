@@ -16,7 +16,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors({
-  origin: ["https://shop-front-1.onrender.com/", "http://localhost:5173/"]
+  origin: ["https://shop-front-1.onrender.com/"]
 }));
 // app.use(cors());
 app.use(helmet());
