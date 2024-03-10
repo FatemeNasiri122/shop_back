@@ -1,6 +1,10 @@
 "use strict";
 const News = require("../model/news");
 
+const formatDate = () => {
+    
+}
+
 exports.getNews = async (req, res, next) => {
     console.log(req);
     const page = +req.query.page || 1;

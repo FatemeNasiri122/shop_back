@@ -190,10 +190,7 @@ exports.addToCart = async (req, res, next) => {
         let updatedProduct = {};
         let sumOfPrice = 0;
         const foundProduct = await Product.findById(product._id);
-        if (foundProduct) {
-            productCount = foundProduct.numberOfProduct > 0 ? foundProduct.numberOfProduct - 1 : 0;
-            await Product.findByIdAndUpdate(product._id, {numberOfProduct: productCount});
-        } else {
+        if (!foundProduct) {
             const error = new Error("product not found");
             error.statusCode = 404;
             throw error;
@@ -248,10 +245,7 @@ exports.removeFromCart = async (req, res, next) => {
             return item.product._id.toString() !== product._id.toString();   
         });
         const foundProduct = await Product.findById(product._id);
-        if (foundProduct) {
-            productCount = foundProduct.numberOfProduct > 0 ? foundProduct.numberOfProduct + productCount : 0;
-            await Product.findByIdAndUpdate(product._id, {numberOfProduct: productCount});
-        } else {
+        if (!foundProduct) {
             const error = new Error("product not found");
             error.statusCode = 404;
             throw error;
@@ -275,10 +269,7 @@ exports.reduceCart = async (req, res, next) => {
         let sumOfPrice = 0;
         let productCount = 0;
         const foundProduct = await Product.findById(product._id);
-        if (foundProduct) {
-            productCount = foundProduct.numberOfProduct > 0 ? foundProduct.numberOfProduct + 1 : 0;
-            await Product.findByIdAndUpdate(product._id, {numberOfProduct: productCount});
-        } else {
+        if (!foundProduct) {
             const error = new Error("product not found");
             error.statusCode = 404;
             throw error;
