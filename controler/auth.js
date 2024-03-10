@@ -204,8 +204,12 @@ exports.addToCart = async (req, res, next) => {
                 if (item.product._id.toString() === foundProduct._id.toString() && foundProduct.numberOfProduct > 0) {
                     item.count = item.count + 1;
                     item.sumOfPrice = item.product.price * item.count;
-                    item.selectedColor = [...item.selectedColor, selectedColor];
-                    item.selectedSize = [...item.selectedSize, selectedSize];
+                    if (selectedColor !== "existed" && selectedSize !== "existed") {
+                        item.selectedColor = [...item.selectedColor, selectedColor];
+                        item.selectedSize = [...item.selectedSize, selectedSize];
+                    }
+                    item.selectedColor = [...new Set(item.selectedColor)];
+                    item.selectedSize = [...new Set(item.selectedSize)];
                     notFound = false;
                 }
                 return item;
