@@ -14,10 +14,10 @@ require('dotenv').config();
 
 const app = express();
 
-app.use(express.json());
-// app.use(cors({
-//   origin: "https://shop-front-1.onrender.com"
-// }));
+// app.use(express.json());
+app.use(cors({
+  origin: "https://shop-front-1.onrender.com"
+}));
 app.use(cors());
 app.use(helmet());
 
