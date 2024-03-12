@@ -15,10 +15,10 @@ require('dotenv').config();
 const app = express();
 
 app.use(express.json());
-// app.use(cors({
-//   origin: "https://shop-front-black.vercel.app"
-// }));
-app.use(cors());
+app.use(cors({
+  origin: "https://clothingshop.onrender.com"
+}));
+// app.use(cors());
 app.use(helmet());
 
 app.use(auth);
@@ -40,7 +40,7 @@ app.get("/verify-token", verifyToken.isAthenticated, (req, res, next) => {
 
 app.use((error, req, res, next) => {
   error.status = error.statusCode || 500;
-  res.status(error.status).json({ message: error.message || "something went wrong please try again" });
+  res.status(error.status).json({ message: error.message });
 });
 
 (async () => {
