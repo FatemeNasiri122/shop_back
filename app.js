@@ -15,10 +15,10 @@ require('dotenv').config();
 const app = express();
 
 app.use(express.json());
-app.use(cors({
-  origin: "https://shop-front-black.vercel.app"
-}));
-// app.use(cors());
+// app.use(cors({
+//   origin: "https://shop-front-black.vercel.app"
+// }));
+app.use(cors());
 app.use(helmet());
 
 app.use(auth);
