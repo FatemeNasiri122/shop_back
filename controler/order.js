@@ -5,18 +5,15 @@ const Product = require("../model/product");
 
 exports.addOrder = async (req, res, next) => {
     const user = req.user;
-    console.log(req.body);
     try {
         user.cart.items.map(async (item) => {
             const foundProduct = await Product.findById(item.product._id);
             if (foundProduct) {
                 const productCount = +foundProduct.numberOfProduct > 0 ? +foundProduct.numberOfProduct - item.count : +foundProduct.numberOfProduct;
                 if (productCount < 0) {
-                    console.log("error");
                     return;
                 }
                 const updatedProduct = await Product.findByIdAndUpdate(foundProduct._id, { numberOfProduct: productCount, });
-                console.log(updatedProduct);
             } else {
                 const error = new Error("product not found");
                 error.statusCode = 404;
@@ -34,10 +31,8 @@ exports.addOrder = async (req, res, next) => {
 
 exports.getOrder = async (req, res, next) => {
     const id = req.user._id;
-    console.log(id);
     try {
         const order = await Order.find({ userId: id }).sort({ createdAt: -1 });
-        console.log(order);
         res.status(200).json({ order });
     } catch (error) {
         next(error);    

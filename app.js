@@ -27,6 +27,10 @@ app.use(news);
 app.use(product);
 app.use(order);
 
+app.get("/", verifyToken.isAthenticated, (req, res, next) => {
+  res.send("<h1>welcome!</h1>");
+});
+
 app.get("/verify-token", verifyToken.isAthenticated, (req, res, next) => {
   const user = req.user;
   if (req.user) {
@@ -35,6 +39,7 @@ app.get("/verify-token", verifyToken.isAthenticated, (req, res, next) => {
     const error = new Error("user not found");
     error.statusCode = 401;
     throw error;
+    next();
   }
 });
 

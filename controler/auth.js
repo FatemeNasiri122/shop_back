@@ -2,7 +2,7 @@
 const User = require("../model/user");
 const blacklistToken = require("../model/blacklistToken");
 const Product = require("../model/product");
-const { query, validationResult } = require('express-validator');
+const { validationResult } = require('express-validator');
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
@@ -39,7 +39,6 @@ exports.signin = async (req, res, next) => {
         const savedUser = await User.findOne({ email });
         if (savedUser) {
             const isPasswordCorrect = await bcrypt.compare(password, savedUser.password);
-            console.log(isPasswordCorrect);
             if (isPasswordCorrect) {
                 const token = jwt.sign({ savedUser }, "secret", { expiresIn: "2h" });
                 res.status(200).json({ message: "logged in successfully", token, user: savedUser });
@@ -74,11 +73,9 @@ exports.editPassword = async (req, res, next) => {
     const user = req.user;
     const result = validationResult(req);
     const { password, newPassword } = req.body;
-    console.log(req.body);
     if (result.isEmpty()) {
         try {
             const isCurrentPasswordValid = await bcrypt.compare(password, user.password);
-            console.log(isCurrentPasswordValid);
             if (isCurrentPasswordValid) {
                 const encryptPassword = await bcrypt.hash(newPassword, 12);
                 const updatedUser = await User.findByIdAndUpdate(user._id, { password: encryptPassword });
@@ -105,12 +102,10 @@ exports.addAddress = async (req, res, next) => {
     let isEditing = false;
     const { name, address, cityName, countryName, phoneNumber, _id } = req.body;
     try {
-        console.log(req.body);
             if (user.address.items.length === 0) {
                 newAddress = [{ name, address, cityName, countryName, phoneNumber, _id: new mongoose.mongo.ObjectId() }];
             } else {
                 user.address.items.map((item) => {
-                    console.log(item);
                     if (item._id.toString() === _id.toString()) {
                         item.name = name;
                         item.address = address;
@@ -126,9 +121,7 @@ exports.addAddress = async (req, res, next) => {
                     newAddress = [...user.address.items, { name, address, cityName,countryName, phoneNumber, _id: new mongoose.mongo.ObjectId() }];
                 }
             }
-            console.log(newAddress);
             const editedUser = await User.findByIdAndUpdate(user._id, { address: { items: newAddress } });
-            console.log(editedUser);
             res.status(200).json({ editedUser, message: "address added succesfully" });
     } catch (error) {
         next(error);
@@ -153,13 +146,12 @@ exports.addToFavorite = async (req, res, next) => {
     const { product } = req.body;
     let newFavorite = [];
     let removeFavorite = false;
-    // console.log(req.body);
     try {
         if (user.favoriteProducts.items.length === 0) {
             newFavorite = [product];
         } else {
-            user.favoriteProducts.items.map((product) => {
-                if (product._id.toString() === product._id.toString()) {
+            user.favoriteProducts.items.map((item) => {
+                if (item._id.toString() === product._id.toString()) {
                     removeFavorite = true;
                     return;
                 }
@@ -170,11 +162,9 @@ exports.addToFavorite = async (req, res, next) => {
                 newFavorite = [...user.favoriteProducts.items, product];
             }
         }
-        console.log(newFavorite);
         const addedProduct = await User.findByIdAndUpdate(user._id, { favoriteProducts: {items: newFavorite} });
         res.status(200).json({addedProduct});
         } catch (error) {
-        console.log(error);
         next(error);
     }
 }
@@ -182,12 +172,9 @@ exports.addToFavorite = async (req, res, next) => {
 exports.addToCart = async (req, res, next) => {
     const user = req.user;
     const { selectedColor, selectedSize, product } = req.body;
-    console.log(req.body);
     try {
         let newCart = [];
         let notFound = true;
-        let productCount = 0;
-        let updatedProduct = {};
         let sumOfPrice = 0;
         const foundProduct = await Product.findById(product._id);
         if (!foundProduct) {
@@ -197,35 +184,26 @@ exports.addToCart = async (req, res, next) => {
         }
         if (user.cart.items.length === 0) {
             sumOfPrice = foundProduct.price;
-            newCart = [{ product: { ...foundProduct }, selectedSize: [selectedSize], selectedColor: [selectedColor], count: 1, sumOfPrice ,_id: new mongoose.mongo.ObjectId() }];
+            newCart = [{ product: { ...foundProduct} , selectedSize: [selectedSize], selectedColor: [selectedColor], count: 1, sumOfPrice ,_id: new mongoose.mongo.ObjectId() }];
         } else {                
             newCart = user.cart.items.map((item) => {
-                console.log(item);
                 if (item.product._id.toString() === foundProduct._id.toString() && foundProduct.numberOfProduct > 0) {
                     item.count = item.count + 1;
                     item.sumOfPrice = item.product.price * item.count;
-                    if (selectedColor !== "existed" && selectedSize !== "existed") {
-                        item.selectedColor = [...item.selectedColor, selectedColor];
-                        item.selectedSize = [...item.selectedSize, selectedSize];
-                    }
-                    item.selectedColor = [...new Set(item.selectedColor)];
-                    item.selectedSize = [...new Set(item.selectedSize)];
+                    item.selectedColor = [...item.selectedColor, selectedColor];
+                    item.selectedSize = [...item.selectedSize, selectedSize];
                     notFound = false;
                 }
                 return item;
             })
             if (notFound) {
                 sumOfPrice = foundProduct.price;
-                newCart = [...user.cart.items, {product: {...foundProduct}, selectedSize: [selectedColor], selectedColor: [selectedSize], sumOfPrice,count: 1,_id: new mongoose.mongo.ObjectId()}];
+                newCart = [...user.cart.items, {product: {...foundProduct}, selectedSize: [selectedSize], selectedColor: [selectedColor], sumOfPrice,count: 1,_id: new mongoose.mongo.ObjectId()}];
             }
         }
-        console.log(newCart);
         const totalOrders = newCart.reduce((accumulator, item) => accumulator + item.count, 0);
         const totalPrice = newCart.reduce((accumulator, item) => accumulator + item.sumOfPrice, 0);
-        console.log(totalOrders);
-        console.log(totalPrice);
         const updatedUser = await User.findByIdAndUpdate(user._id, { cart: { items: newCart, totalOrders, totalPrice } });
-        console.log(updatedUser)
         res.status(200).json({updatedUser});
     } catch (error) {
         next(error);
@@ -239,9 +217,6 @@ exports.removeFromCart = async (req, res, next) => {
     try {
         let newCart = [];
         let productCount = 0;
-        let sumOfPrice = 0;
-        console.log(req.body);
-        console.log(user);
         newCart = user.cart.items.filter((item) => {
             if (item.product._id.toString() === product._id.toString()) {
                 productCount = item.count;
@@ -254,11 +229,9 @@ exports.removeFromCart = async (req, res, next) => {
             error.statusCode = 404;
             throw error;
         }
-        console.log(newCart);
         const totalOrders = newCart.reduce((accumulator, item) => accumulator + item.count, 0);
         const totalPrice = newCart.reduce((accumulator, item) => accumulator + +item.sumOfPrice , 0);
         const updatedUser = await User.findByIdAndUpdate(user._id, { cart: { items: newCart, totalOrders, totalPrice } });
-        console.log(updatedUser)
         res.status(200).json({updatedUser, message: "product removed from cart"});
     } catch (error) {
         next(error);
@@ -270,28 +243,24 @@ exports.reduceCart = async (req, res, next) => {
     const { product } = req.body;
     try {
         let newCart = [];
-        let sumOfPrice = 0;
-        let productCount = 0;
         const foundProduct = await Product.findById(product._id);
         if (!foundProduct) {
             const error = new Error("product not found");
             error.statusCode = 404;
             throw error;
         }
-        console.log(req.body);
-        console.log(user);
         newCart = user.cart.items.map((item) => {
             if (item.product._id.toString() === product._id.toString() && foundProduct.numberOfProduct > 0) {
                 item.count = item.count - 1;
                 item.sumOfPrice = item.product.price * item.count;
+                item.selectedColor.pop();
+                item.selectedSize.pop();
             }
             return item;
         });
-        console.log(newCart);
         const totalOrders = newCart.reduce((accumulator, item) => accumulator + item.count, 0);
         const totalPrice = newCart.reduce((accumulator, item) => accumulator + +item.sumOfPrice, 0);
         const updatedUser = await User.findByIdAndUpdate(user._id,{cart: { items: newCart, totalOrders, totalPrice }});
-        console.log(updatedUser)
         res.status(200).json({updatedUser});
     } catch (error) {
         next(error);
@@ -302,7 +271,7 @@ exports.logout = async (req, res, next) => {
     const token = req.get("token");
     try {
         const blakcklist = new blacklistToken({ token: token });
-        const savedBlacklist = await blakcklist.save();
+        await blakcklist.save();
         res.json({ message: "you have been succsessfully logged out" });
     } catch (error) {
         next(error);

@@ -2,7 +2,6 @@
 const Product = require("../model/product");
 
 exports.getProducts = async (req, res, next) => {
-    console.log(req.query);
     const type = req.params.type;
     const page = req.query.page || 1;
     const category = req.query.category || "";
@@ -11,7 +10,6 @@ exports.getProducts = async (req, res, next) => {
     const sortby = req.query.sortby || "";
     const isFilterNotActive = category === "" && color === "" && size === "" && sortby === "";
     const isFilterNotActive2 = category === "" && color === "" && size === "";
-    console.log(isFilterNotActive);
     if (typeof size === "string") {
         size = [size];
     }
@@ -19,10 +17,10 @@ exports.getProducts = async (req, res, next) => {
         color = [color];
     }
     try {
-        let totalItems = await Product.find({ type }).countDocuments();
+        let totalItems = await Product.find({ type }).countDocuments();;
         let products = [];
         if (isFilterNotActive) {     
-        products = await Product.find().skip((page - 1) * 4).limit(4).find({ type });
+            products = await Product.find({ type }).skip((page - 1) * 8).limit(8).find({ type });
             res.status(200).json({ products, totalItems });
             return;
         } else {
@@ -32,42 +30,37 @@ exports.getProducts = async (req, res, next) => {
                         { $or: [{ 'color': { $all: color }  }, { 'size': { $all: size } }, { 'category': category }] },
                         { $or: [{ 'type': type }] },
                     ]
-                }, {}, { skip: (page - 1) * 4, limit: 4 }).sort({ price: 1 });
+                }, {}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: 1 });
                 totalItems = await Product.find({
                     $and: [
                         { $or: [{ 'color': { $all: color }  }, { 'size': { $all: size } }, { 'category': category }] },
                         { $or: [{ 'type': type }] },
                     ]
                 }).countDocuments();
-            console.log(products);
             } else if (sortby === "most expensive" && !isFilterNotActive2) {
                 products = await Product.find({
                     $and: [
                         { $or: [{ 'color': { $all: color } }, { 'size': { $all: size } }, { 'category': category }] },
                         { $or: [{ 'type': type }] },
                     ]
-                }, {}, { skip: (page - 1) * 4, limit: 4 }).sort({ price: -1 });
+                }, {}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: -1 });
                 totalItems = await Product.find({
                     $and: [
                         { $or: [{ 'color': { $all: color } }, { 'size': { $all: size } }, { 'category': category }] },
                         { $or: [{ 'type': type }] },
                     ]
                 }).countDocuments();
-            console.log(products);
             } else if (sortby === "cheapest") {
-                products = await Product.find({ type }, {}, { skip: (page - 1) * 4, limit: 4 }).sort({ price: 1 });
-                console.log(products);
+                products = await Product.find({ type }, {}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: 1 });
             } else if (sortby === "most expensive") {
-                products = await Product.find({ type }, {}, { skip: (page - 1) * 4, limit: 4 }).sort({ price: -1 });
-                console.log(products);
+                products = await Product.find({ type }, {}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: -1 });
             } else {
-                console.log("koft")
                 products = await Product.find({
                     $and: [
                         { $or: [{ 'color': { $all: color } }, { 'size': { $all: size } }, { 'category': category }] },
                         { $or: [{ 'type': type }] },
                     ]
-                }, {}, { skip: (page - 1) * 4, limit: 4 });
+                }, {}, { skip: (page - 1) * 8, limit: 8 });
                 totalItems = await Product.find({
                     $and: [
                         { $or: [{ 'color': { $all: color } }, { 'size': { $all: size } }, { 'category': category }] },
@@ -75,12 +68,10 @@ exports.getProducts = async (req, res, next) => {
                     ]
                 }).countDocuments();
             }
-            console.log(products)
             res.status(200).json({ products, totalItems });
         }
 
     } catch (error) {
-        console.log(error);
         next(error);
     }
 }
