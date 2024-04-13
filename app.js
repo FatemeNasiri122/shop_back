@@ -15,10 +15,10 @@ require('dotenv').config();
 const app = express();
 
 app.use(express.json());
-app.use(cors({
-  origin: "https://clothingshop.onrender.com"
-}));
-// app.use(cors());
+// app.use(cors({
+//   origin: "https://clothingshop.onrender.com"
+// }));
+app.use(cors());
 app.use(helmet());
 
 app.use(auth);
@@ -50,11 +50,12 @@ app.use((error, req, res, next) => {
 
 (async () => {
   try {
-    await mongoose.connect(process.env.URL, {dbName: "test"})
-  } catch (e) {
-    const error = new Error("incorrect");
+    await mongoose.connect(process.env.URL, { dbName: "test" })
+  } catch (err) {
+    // const error = new Error("incorrect");
     // error.statusCode = 401;
-    throw error;
+    console.log(err)
+    // throw error;
   }
 })();
 

@@ -35,7 +35,7 @@ module.exports.isAthenticated = async (req, res, next) => {
             // error.statusCode = 404;
             // throw error;
             next();
-        } 
+        }
     } catch (error) {
         next(error);
     }
