@@ -16,12 +16,12 @@ exports.register = async (req, res, next) => {
             if (alreadyExist) {
                 const error = new Error("email already exists");
                 error.statusCode = 400;
-                throw error; 
+                throw error;
             }
             const encryptedPassword = await bcrypt.hash(password, 12);
-            const user = new User({ firstName: firstName, lastName: lastName, email: email, password: encryptedPassword, newsLetter: newsLetter, cart: { items: [] }, address: { items: [] }, favoriteProducts: { items: []} });
+            const user = new User({ firstName: firstName, lastName: lastName, email: email, password: encryptedPassword, newsLetter: newsLetter, cart: { items: [] }, address: { items: [] }, favoriteProducts: { items: [] } });
             const savedUser = await user.save();
-            const token = jwt.sign({ savedUser }, "secret", { expiresIn: "2h" });
+            const token = jwt.sign({ id: savedUser._id }, "secret", { expiresIn: "2h" });
             res.status(200).json({ message: "Registration was successful", token, user });
         } catch (error) {
             next(error);
@@ -40,7 +40,7 @@ exports.signin = async (req, res, next) => {
         if (savedUser) {
             const isPasswordCorrect = await bcrypt.compare(password, savedUser.password);
             if (isPasswordCorrect) {
-                const token = jwt.sign({ savedUser }, "secret", { expiresIn: "2h" });
+                const token = jwt.sign({ id: savedUser._id }, "secret", { expiresIn: "24h" });
                 res.status(200).json({ message: "logged in successfully", token, user: savedUser });
             } else {
                 const error = new Error("incorrect password");
@@ -55,14 +55,14 @@ exports.signin = async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-    
+
 }
 
 exports.editUser = async (req, res, next) => {
     const id = req.user._id;
     const { firstName, lastName, email, phoneNumber, country, city, newsLetter } = req.body;
     try {
-        const user = await User.findByIdAndUpdate(id, { firstName, lastName, email, phoneNumber ,country ,city ,newsLetter});
+        const user = await User.findByIdAndUpdate(id, { firstName, lastName, email, phoneNumber, country, city, newsLetter });
         res.status(200).json({ user, message: "user edited successfully" });
     } catch (error) {
         next(error);
@@ -85,7 +85,7 @@ exports.editPassword = async (req, res, next) => {
                 const error = new Error("password invalid");
                 error.statusCode = 401;
                 throw error;
-        }
+            }
         } catch (error) {
             next(error);
         }
@@ -102,27 +102,27 @@ exports.addAddress = async (req, res, next) => {
     let isEditing = false;
     const { name, address, cityName, countryName, phoneNumber, _id } = req.body;
     try {
-            if (user.address.items.length === 0) {
-                newAddress = [{ name, address, cityName, countryName, phoneNumber, _id: new mongoose.mongo.ObjectId() }];
-            } else {
-                user.address.items.map((item) => {
-                    if (item._id.toString() === _id.toString()) {
-                        item.name = name;
-                        item.address = address;
-                        item.countryName = countryName;
-                        item.phoneNumber = phoneNumber;
-                        isEditing = true;
-                        return;
-                    }
-                });
-                if (isEditing) {
-                    newAddress = [...user.address.items];
-                } else {
-                    newAddress = [...user.address.items, { name, address, cityName,countryName, phoneNumber, _id: new mongoose.mongo.ObjectId() }];
+        if (user.address.items.length === 0) {
+            newAddress = [{ name, address, cityName, countryName, phoneNumber, _id: new mongoose.mongo.ObjectId() }];
+        } else {
+            user.address.items.map((item) => {
+                if (item._id.toString() === _id.toString()) {
+                    item.name = name;
+                    item.address = address;
+                    item.countryName = countryName;
+                    item.phoneNumber = phoneNumber;
+                    isEditing = true;
+                    return;
                 }
+            });
+            if (isEditing) {
+                newAddress = [...user.address.items];
+            } else {
+                newAddress = [...user.address.items, { name, address, cityName, countryName, phoneNumber, _id: new mongoose.mongo.ObjectId() }];
             }
-            const editedUser = await User.findByIdAndUpdate(user._id, { address: { items: newAddress } });
-            res.status(200).json({ editedUser, message: "address added succesfully" });
+        }
+        const editedUser = await User.findByIdAndUpdate(user._id, { address: { items: newAddress } });
+        res.status(200).json({ editedUser, message: "address added succesfully" });
     } catch (error) {
         next(error);
     }
@@ -132,7 +132,7 @@ exports.deleteAddress = async (req, res, next) => {
     const user = req.user;
     const { _id } = req.body;
     const filterAddress = user.address.items.filter((item) => item._id.toString() !== _id.toString());
-    const newAddress = {items: filterAddress}
+    const newAddress = { items: filterAddress }
     try {
         const updatedUser = await User.findByIdAndUpdate(user._id, { address: newAddress });
         res.status(200).json({ updatedUser, message: "address deleted succesfully" });
@@ -162,9 +162,9 @@ exports.addToFavorite = async (req, res, next) => {
                 newFavorite = [...user.favoriteProducts.items, product];
             }
         }
-        const addedProduct = await User.findByIdAndUpdate(user._id, { favoriteProducts: {items: newFavorite} });
-        res.status(200).json({addedProduct});
-        } catch (error) {
+        const addedProduct = await User.findByIdAndUpdate(user._id, { favoriteProducts: { items: newFavorite } });
+        res.status(200).json({ addedProduct });
+    } catch (error) {
         next(error);
     }
 }
@@ -184,8 +184,8 @@ exports.addToCart = async (req, res, next) => {
         }
         if (user.cart.items.length === 0) {
             sumOfPrice = foundProduct.price;
-            newCart = [{ product: { ...foundProduct} , selectedSize: [selectedSize], selectedColor: [selectedColor], count: 1, sumOfPrice ,_id: new mongoose.mongo.ObjectId() }];
-        } else {                
+            newCart = [{ product: { ...foundProduct }, selectedSize: [selectedSize], selectedColor: [selectedColor], count: 1, sumOfPrice, _id: new mongoose.mongo.ObjectId() }];
+        } else {
             newCart = user.cart.items.map((item) => {
                 if (item.product._id.toString() === foundProduct._id.toString() && foundProduct.numberOfProduct > 0) {
                     item.count = item.count + 1;
@@ -198,17 +198,17 @@ exports.addToCart = async (req, res, next) => {
             })
             if (notFound) {
                 sumOfPrice = foundProduct.price;
-                newCart = [...user.cart.items, {product: {...foundProduct}, selectedSize: [selectedSize], selectedColor: [selectedColor], sumOfPrice,count: 1,_id: new mongoose.mongo.ObjectId()}];
+                newCart = [...user.cart.items, { product: { ...foundProduct }, selectedSize: [selectedSize], selectedColor: [selectedColor], sumOfPrice, count: 1, _id: new mongoose.mongo.ObjectId() }];
             }
         }
         const totalOrders = newCart.reduce((accumulator, item) => accumulator + item.count, 0);
         const totalPrice = newCart.reduce((accumulator, item) => accumulator + item.sumOfPrice, 0);
         const updatedUser = await User.findByIdAndUpdate(user._id, { cart: { items: newCart, totalOrders, totalPrice } });
-        res.status(200).json({updatedUser});
+        res.status(200).json({ updatedUser });
     } catch (error) {
         next(error);
     }
-    
+
 }
 
 exports.removeFromCart = async (req, res, next) => {
@@ -221,7 +221,7 @@ exports.removeFromCart = async (req, res, next) => {
             if (item.product._id.toString() === product._id.toString()) {
                 productCount = item.count;
             }
-            return item.product._id.toString() !== product._id.toString();   
+            return item.product._id.toString() !== product._id.toString();
         });
         const foundProduct = await Product.findById(product._id);
         if (!foundProduct) {
@@ -230,9 +230,9 @@ exports.removeFromCart = async (req, res, next) => {
             throw error;
         }
         const totalOrders = newCart.reduce((accumulator, item) => accumulator + item.count, 0);
-        const totalPrice = newCart.reduce((accumulator, item) => accumulator + +item.sumOfPrice , 0);
+        const totalPrice = newCart.reduce((accumulator, item) => accumulator + +item.sumOfPrice, 0);
         const updatedUser = await User.findByIdAndUpdate(user._id, { cart: { items: newCart, totalOrders, totalPrice } });
-        res.status(200).json({updatedUser, message: "product removed from cart"});
+        res.status(200).json({ updatedUser, message: "product removed from cart" });
     } catch (error) {
         next(error);
     }
@@ -260,8 +260,8 @@ exports.reduceCart = async (req, res, next) => {
         });
         const totalOrders = newCart.reduce((accumulator, item) => accumulator + item.count, 0);
         const totalPrice = newCart.reduce((accumulator, item) => accumulator + +item.sumOfPrice, 0);
-        const updatedUser = await User.findByIdAndUpdate(user._id,{cart: { items: newCart, totalOrders, totalPrice }});
-        res.status(200).json({updatedUser});
+        const updatedUser = await User.findByIdAndUpdate(user._id, { cart: { items: newCart, totalOrders, totalPrice } });
+        res.status(200).json({ updatedUser });
     } catch (error) {
         next(error);
     }

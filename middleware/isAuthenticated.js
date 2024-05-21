@@ -15,7 +15,7 @@ module.exports.isAthenticated = async (req, res, next) => {
                 throw error;
             }
             if (verifyToken) {
-                const user = await User.findById(verifyToken.savedUser._id);
+                const user = await User.findById(verifyToken.id);
                 if (user) {
                     req.user = user;
                     next();
