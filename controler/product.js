@@ -46,9 +46,9 @@ exports.getProducts = async (req, res, next) => {
                     ]
                 }).countDocuments();
             } else if (sortby === "cheapest") {
-                products = await Product.find({}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: 1 });
+                products = await Product.find({}, {}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: 1 });
             } else if (sortby === "most expensive") {
-                products = await Product.find({}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: -1 });
+                products = await Product.find({}, {}, { skip: (page - 1) * 8, limit: 8 }).sort({ price: -1 });
             } else {
                 products = await Product.find({
                     $and: [

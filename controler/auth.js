@@ -21,7 +21,7 @@ exports.register = async (req, res, next) => {
             const encryptedPassword = await bcrypt.hash(password, 12);
             const user = new User({ firstName: firstName, lastName: lastName, email: email, password: encryptedPassword, newsLetter: newsLetter, cart: { items: [] }, address: { items: [] }, favoriteProducts: { items: [] } });
             const savedUser = await user.save();
-            const token = jwt.sign({ id: savedUser._id }, "secret", { expiresIn: "2h" });
+            const token = jwt.sign({ id: savedUser._id }, "secret", { expiresIn: "24h" });
             res.status(200).json({ message: "Registration was successful", token, user });
         } catch (error) {
             next(error);
